@@ -21,21 +21,32 @@ Press a hotkey, type, hit Enter. Done.
 
 ## Setup
 
-**1. Install dependencies**
+**1. Clone the repo**
+
+```
+git clone https://github.com/Bnuz001/FastTodoist.git
+cd FastTodoist
+```
+
+**2. Install dependencies**
 
 ```
 pip install -r requirements.txt
 ```
 
-**2. Get your Todoist API token**
+**3. Create the launcher shortcut**
+
+```
+python install.py
+```
+
+This generates a `run.lnk` shortcut on your machine. Double-click it to launch FastTodoist silently with no console window. You only need to run `install.py` once.
+
+**4. Get your Todoist API token**
 
 Go to [todoist.com](https://todoist.com) → Settings → Integrations → Developer → copy your API token.
 
-**3. Run**
-
-Double-click `run.vbs`.
-
-On first launch a dialog will ask for your API token. It's saved to Windows Credential Manager and never asked again.
+On first launch a dialog will ask for it. It's saved to Windows Credential Manager and never asked again.
 
 ## Usage
 
@@ -51,7 +62,7 @@ On first launch a dialog will ask for your API token. It's saved to Windows Cred
 
 ## Run on startup
 
-Press `Win+R`, type `shell:startup`, and place a shortcut to `run.vbs` in that folder.
+Press `Win+R`, type `shell:startup`, and place a shortcut to `run.lnk` in that folder.
 
 ## Dependencies
 
