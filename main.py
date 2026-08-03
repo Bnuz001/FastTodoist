@@ -1,5 +1,6 @@
 import ctypes
 import ctypes.wintypes
+import os
 import sys
 import threading
 import time
@@ -8,6 +9,14 @@ import tkinter.messagebox
 import tkinter.simpledialog
 import requests
 import keyring
+
+# pythonw.exe runs with no console, so sys.stdout/stderr are None. Any library
+# that tries to print/log during startup (pystray, PIL, keyboard) then crashes
+# with AttributeError, silently killing that background thread.
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w")
 
 KEYRING_SERVICE = "FastTodoist"
 KEYRING_USER = "todoist_token"
