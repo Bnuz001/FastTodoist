@@ -1,12 +1,14 @@
 import ctypes
 import ctypes.wintypes
 import os
+import pathlib
 import sys
 import threading
 import time
 import tkinter as tk
 import tkinter.messagebox
 import tkinter.simpledialog
+import winreg
 import requests
 import keyring
 
@@ -21,6 +23,8 @@ if sys.stderr is None:
 KEYRING_SERVICE = "FastTodoist"
 KEYRING_USER = "todoist_token"
 HOTKEY = "ctrl+shift+."
+AUTOSTART_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+AUTOSTART_NAME = "FastTodoist"
 
 BG = "#1e1e1e"
 FG = "#e8e8e8"
@@ -116,6 +120,35 @@ def _prompt_for_token(root, first_run=False):
     token = token.strip()
     keyring.set_password(KEYRING_SERVICE, KEYRING_USER, token)
     return token
+
+
+# ── Autostart (HKCU Run key, no admin needed) ─────────────────────────────────
+
+def _autostart_command() -> str:
+    pythonw = pathlib.Path(sys.executable).with_name("pythonw.exe")
+    return f'"{pythonw}" "{pathlib.Path(__file__).resolve()}"'
+
+
+def _autostart_enabled() -> bool:
+    # Compare against the current command so a stale entry (repo moved,
+    # different Python) shows as off and gets rewritten when toggled on.
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, AUTOSTART_KEY) as key:
+            value, _ = winreg.QueryValueEx(key, AUTOSTART_NAME)
+        return value == _autostart_command()
+    except OSError:
+        return False
+
+
+def _set_autostart(enabled: bool) -> None:
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, AUTOSTART_KEY, 0, winreg.KEY_SET_VALUE) as key:
+        if enabled:
+            winreg.SetValueEx(key, AUTOSTART_NAME, 0, winreg.REG_SZ, _autostart_command())
+        else:
+            try:
+                winreg.DeleteValue(key, AUTOSTART_NAME)
+            except FileNotFoundError:
+                pass
 
 
 # ── App ───────────────────────────────────────────────────────────────────────
@@ -288,6 +321,11 @@ class FastTodoist:
                 f"FastTodoist  ({HOTKEY})",
                 pystray.Menu(
                     pystray.MenuItem("Change API token", self._on_change_token),
+                    pystray.MenuItem(
+                        "Start with Windows",
+                        self._on_toggle_autostart,
+                        checked=lambda _: _autostart_enabled(),
+                    ),
                     pystray.Menu.SEPARATOR,
                     pystray.MenuItem("Quit", self._quit),
                 ),
@@ -299,6 +337,13 @@ class FastTodoist:
 
     def _on_change_token(self, *_):
         self.root.after(0, self._change_token_on_main_thread)
+
+    def _on_toggle_autostart(self, icon, _item):
+        try:
+            _set_autostart(not _autostart_enabled())
+        except OSError as e:
+            print(f"[FastTodoist] Error changing autostart: {e}", file=sys.stderr)
+        icon.update_menu()
 
     def _change_token_on_main_thread(self):
         new_token = _prompt_for_token(self.root, first_run=False)

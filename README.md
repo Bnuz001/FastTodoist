@@ -58,11 +58,14 @@ On first launch a dialog will ask for it. It's saved to Windows Credential Manag
 | `Escape` | Dismiss |
 | Click elsewhere | Dismiss |
 | Tray → Change API token | Update stored token |
+| Tray → Start with Windows | Toggle autostart at login |
 | Tray → Quit | Exit |
 
 ## Run on startup
 
-Press `Win+R`, type `shell:startup`, and place a shortcut to `run.lnk` in that folder.
+Right-click the tray icon and tick **Start with Windows**. Untick it to turn autostart off again.
+
+This adds a `FastTodoist` entry under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (no admin rights needed). If you move the repo folder, toggle the option once more to point it at the new location.
 
 ## Dependencies
 
